@@ -93,7 +93,8 @@ utilizing the feedforward models of your drivetrain to estimate
 the voltage required for a (velocity, acceleration) command and setting
 motor output to a PID setpoint + feedforward voltage. See (TODO LINK)
 charicterizing your drivetrain for information on the DifferentialDrive
-class.
+class. A bare-bones example of a DifferentialTrackerDriveBase can be
+found (TODO LINK) HERE.
 
 An example path following command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
