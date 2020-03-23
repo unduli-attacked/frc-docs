@@ -37,11 +37,11 @@ Vocabulary
 What is state-space notation?
 -----------------------------
 
-State-space notation is a set of matrix equations which describe how a system will evolve over time. These equations relate the change in state :math:`\dot{\textbf{x}}`, and the output :math:`\textbf{y}`, to linear combinations of the current state vector :math:`\textbf{x}` and input vector :math:`\textbf{u}`. See section 4.2 of `Controls Engineering in FRC <https://file.tavsys.net/control/controls-engineering-in-frc.pdf>`__ for an introduction to linear combinations. The core idea of linear transformations is that we are simply summing or scaling the elements of :math:`\textbf{x}` and :math:`\textbf{u}`. For example, an operation involving an exponent or trigonometric function would not be considered a linear transformation. The following two sets of equations are the standard form of continuous and discrete state-space notation:
+State-space notation is a set of matrix equations which describe how a system will evolve over time. These equations relate the change in state :math:`\dot{\mathbf{x}}`, and the output :math:`\mathbf{y}`, to linear combinations of the current state vector :math:`\mathbf{x}` and input vector :math:`\mathbf{u}`. See section 4.2 of `Controls Engineering in FRC <https://file.tavsys.net/control/controls-engineering-in-frc.pdf>`__ for an introduction to linear combinations. The core idea of linear transformations is that we are simply summing or scaling the elements of :math:`\mathbf{x}` and :math:`\mathbf{u}`. For example, an operation involving an exponent or trigonometric function would not be considered a linear transformation. The following two sets of equations are the standard form of continuous and discrete state-space notation:
 
 .. math::
     \text{Continuos:}
-    \dot{\textbf{x}} &= \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u} \\
+    \dot{\mathbf{x}} &= \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u} \\
     \mathbf{y} &= \mathbf{C}\mathbf{x} + \mathbf{D}\mathbf{u} \\
     \nonumber \\
     \text{Discrete:}
@@ -60,17 +60,17 @@ State-space notation is a set of matrix equations which describe how a system wi
 
 State-space control can deal with "continuous" or "discrete" systems. In decades past, plants and controllers were implemented using analog electronics, which are continuous in nature. These analog controllers didn't have discrete steps to them, analogous to an infinitely fast computer processor. However, processors such as the RoboRIO run in discrete "steps." Systems are often modeled first as continuous systems, and later converted to the discrete form in a process called discretization. WPILib's LinearSystem takes the continuous system matrices, and converts them internally where necessary. 
 
-..note:: Since a microcontroller performs discrete steps, there is a sample delay that introduces phase loss in the controller. Large amounts of phase loss can make a stable controller in the continuous domain become unstable in the discrete domain. The easiest way to combat phase loss and increase performance is to decrease the time between updates. WPILib's ``Notifier`` class if updates faster than the main robot loop are desired. 
+..note:: Since a microcontroller performs discrete steps, there is a sample delay that introduces phase loss in the controller. Large amounts of phase loss can make a stable controller in the continuous domain become unstable in the discrete domain. The easiest way to combat phase loss and increase performance is to decrease the time between updates. WPILib's ``Notifier`` class can be used if updates faster than the main robot loop are desired. 
 
 State-space notation example -- Flywheel from kV and kA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Recall that we can model the motion of a flywheel connected to a brushed DC motor with the equation :math:`V = kV \dot v + kA \dot a`, where V is voltage output, v is velocity and a is acceleration. This equation can be rewritten as :math:`a = (V - kV \dot v) / kA`, or :math:`a = ((-kV / kA) \dot v + 1/kA \dot V)`. Notice anything familiar? This equation relates the acceleration of the flywheel to its velocity and the voltage applied. 
+Recall that we can model the motion of a flywheel connected to a brushed DC motor with the equation :math:`V = kV \dot v + kA \dot a`, where V is voltage output, v is the flywheel's angular velocity and a is its angular acceleration. This equation can be rewritten as :math:`a = (V - kV \dot v) / kA`, or :math:`a = ((-kV / kA) \dot v + 1/kA \dot V)`. Notice anything familiar? This equation relates the angular acceleration of the flywheel to its angular velocity and the voltage applied. 
 
 We can convert this equation to state-space notation. We can create a system with one state (velocity), one input (voltage), and one output (velocity). Recalling that the first derivative of velocity is acceleration, we can write our equation as follows:
 
 .. math:: 
-    \textbf{\dot{x}} &= [\frac{-kV}{kA}] \cdot v + \frac{1}{kA} \cdot V
+    \mathbf{\dot{x}} &= [\frac{-kV}{kA}] \cdot v + \frac{1}{kA} \cdot V
 
 That's it! That's the state-space model of a system for which we have the kV and kA constants. This same math is use in FRC-Characterization to model flywheels and drivetrain velocity systems.
 
@@ -85,9 +85,9 @@ WPILib's state-space control is based on the ``LinearSystemLoop`` class. This cl
 
 As the system being controlled is in discrete domain, we follow the following steps at each update cycle:
 
-- ``predict()`` is called to update the Kalman Filter's state vector estimate :math:`\dot{\textbf{x}}` based on applied inputs.
+- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\dot{\mathbf{x}}` to update the filter's estimate :math:`\dot{\mathbf{x}}. This updated state estimate is used by the Linear Quadratic Regulator to generate an updated input :math`\mathbf{u}` to drive the system towards the next reference (or setpoint).
 
-- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\dot{\textbf{x}}` to update the filter's estimate :math:`\dot{\textbf{x}}. This updated state estimate is used by the Linear Quadratic Regulator to generate an updated input :math`\textbf{u}` to drive the system towards the next reference (or setpoint).
+- ``predict()`` is called to update the Kalman Filter's state vector estimate :math:`\dot{\mathbf{x}}` based on applied inputs.
 
 - The updated input is set to motors or other physical actuator.
 
