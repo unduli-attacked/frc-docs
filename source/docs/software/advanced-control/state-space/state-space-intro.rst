@@ -34,6 +34,16 @@ Vocabulary
     - Ex. A flywheel might have 1 output from a encoder that measures it's velocity.
     - Ex. A drivetrain might use solvePNP and V-SLAM to find it's x/y/heading position on the field. It's fine that there are 6 measurements (solvePNP x/y/heading and V-SLAM x/y/heading) and 3 states (robot x/y/heading).
 
+What is state-space?
+--------------------
+
+Recall that 2D space has two axes: x and y. We represent locations within this space as a pair of numbers packaged in a vector, and each coordinate is a measure of how far to move along the corresponding axis. State-space is a Cartesian coordinate system with an axis for each state variable, and we represent locations within it the same way we do for 2D space: with a list of numbers in a vector. Each element in the vector corresponds to a state of the system. This example shows two example state vectors in the state-space of an elevator model with the states :math`[\text{position}, \text{velocity}]`
+
+.. image:: images/state-space-graph.png
+   :align: center
+
+In addition to the state, inputs and outputs are represented as vectors. Since the mapping from the current states and inputs to the change in state is a system of equations, it’s natural to write it in matrix form. This matrix equation can be written in state-space notation.
+
 What is state-space notation?
 -----------------------------
 
