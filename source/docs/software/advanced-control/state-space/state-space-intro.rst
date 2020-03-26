@@ -40,7 +40,8 @@ What is state-space?
 Recall that 2D space has two axes: x and y. We represent locations within this space as a pair of numbers packaged in a vector, and each coordinate is a measure of how far to move along the corresponding axis. State-space is a Cartesian coordinate system with an axis for each state variable, and we represent locations within it the same way we do for 2D space: with a list of numbers in a vector. Each element in the vector corresponds to a state of the system. This example shows two example state vectors in the state-space of an elevator model with the states :math`[\text{position}, \text{velocity}]`
 
 .. image:: images/state-space-graph.png
-   :align: center
+
+In this image, the vectors representing states in state-space are arrows. From now on these vectors will be represented simply by a point at the vector's tip, but remember that the rest of the vector is still there.
 
 In addition to the state, inputs and outputs are represented as vectors. Since the mapping from the current states and inputs to the change in state is a system of equations, it’s natural to write it in matrix form. This matrix equation can be written in state-space notation.
 
@@ -83,6 +84,41 @@ We can convert this equation to state-space notation. We can create a system wit
     \mathbf{\dot{x}} &= [\frac{-kV}{kA}] \cdot v + \frac{1}{kA} \cdot V
 
 That's it! That's the state-space model of a system for which we have the kV and kA constants. This same math is use in FRC-Characterization to model flywheels and drivetrain velocity systems.
+
+Visualizing State-space responses: phase portrait
+-------------------------------------------------
+
+A `phase portrait <https://en.wikipedia.org/wiki/Phase_portrait>`__ can help give a visual intuition for the response of a system in state-space. The vectors on the graph have their roots at some point :math:`\mathbf{x}` in state-space, and point in the direction of :math:`\mathbf{\dot{x}}`, the direction that the system will evolve over time. This example shows a model of a pendulum with the states of angle and angular velocity. 
+
+.. image:: images/pendulum-phase-plot.png
+
+To trace a potential trajectory that a system could take through state-space, choose a point to start at and follow the arrows around. In this example, we might start at :math:`[-2, 0]`. From there, the velocity increases as we swing through vertical and starts to decrease until we reach the opposite extreme of the swing. This cycle of spinning about the origin repeats indefinitely.
+
+.. image:: images/pendulum-markedup.jpg
+
+Note that near the edges of the phase plot, the X axis wraps around as a rotation of :math:`\pi` radians counter clockwise and a rotation of :math:`\pi` radians clockwise will end at the same point.
+
+Visualizing Feedforward
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This phase portrait shows the "open loop" responses of the system -- that is, how it will react if we were to let the state evolve naturally. If we want to, say, balance the pendulum horizontal (at :math:`(\frac{\pi}{2}, 0)` in state space), we would need to somehow apply a control input to counteract the open loop tendency of the pendulum to swing downward. This is what feedforward is trying to do -- make it so that our phase portrait will have an equilibrium at the reference position (or setpoint) in state-space. Looking at our phase portrait from before, we can see that at :math:`(\frac{\pi}{2}, 0)` in state space, gravity is pulling the pendulum down with some torque T, and producing some downward angular acceleration with magnitude :math:`\frac{\uptau}{i}`. where I is angular `moment of inertia <https://en.wikipedia.org/wiki/Moment_of_inertia>`__ of the pendulum. If we want to create an equilibrium at our reference of :math:`(\frac{\pi}{2}, 0)`, we would need to apply an input that produces a :math:`\mathbf{\dot{x}}` is equal in magnitude and opposite in direction to the :math:`\mathbf{\dot{x}}` produced by the system's open-loop response to due to gravity. The math for this will be presented later. Here is the phase portrait where we apply a constant input that opposes the force of gravity at :math:`(\frac{\pi}{2}, 0)`:
+
+.. image:: images/pendulum-balance.png
+
+Feedback Control and LQR
+------------------------
+
+In the case of a DC motor, with just a mathematical model and knowledge of all current states of the system(i.e., angular velocity), we can predict all future states given the future voltage inputs. But if the system is disturbed in any way that isn’t modeled by our equations, like a load or unexpected friction,the angular velocity of the motor will deviate from the model over time. To combat this, we can give the motor corrective commands to account for model uncertainty. 
+
+A PID controller is a form of feedback control. State-space control often uses the control law (a mathematical formula that generates inputs to drive a system to a desired state) :math:`\mathbf{u} = \mathbf{K(r - x)}`, where K is some controller gain matrix, r is the reference state and x is the current state in state-space. The difference between these two vectors, :math:`r - x`, is known as "error." This control law is essentially a multidimensional proportional controller. Because model-based control means that we can predict the future states of a system given an initial condition and future control inputs, we can pick a mathematically optimal gain matrix K. 
+
+Let's start with the open loop pendulum example. The case where K is the zero matrix would mean that no control input is applied, and the phase portrait would look identical to the one above. Let's pick a K of [[2, 0], [0, 2]], where are input to the pendulum is angular acceleration. This K would mean that for every degree of position error, the angular acceleration would be 1 degree per second squared; similarly, we accelerate by 1 degree per second squared for every degree per second of error. Try following an arrow from somewhere in state-space inwards -- no matter the initial conditions, the state will settle at the reference rather than circle endlessly with pure feedforward. 
+
+.. image:: images/pendulum-closed-loop.png
+
+But with a real system, how is this gain matrix K chosen?
+L I N E A R Q U A D R A T I C R E Q U L A T O R
+
 
 WPILib's LinearSystemLoop
 -------------------------
