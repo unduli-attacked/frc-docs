@@ -59,15 +59,15 @@ State-space notation is a set of matrix equations which describe how a system wi
     \mathbf{x}_{k+1} &= \mathbf{A}\mathbf{x}_k + \mathbf{B}\mathbf{u}_k \\
     \mathbf{y}_k &= \mathbf{C}\mathbf{x}_k + \mathbf{D}\mathbf{u}_k
 
-.. math::
-  \begin{figurekey}
-    \begin{tabular}{llll}
-      $\mtx{A}$ & system matrix, states \times states       & $\mtx{x}$ & state vector, states \times 1 \\
-      $\mtx{B}$ & input matrix, states \times inputs        & $\mtx{u}$ & input vector, inptus \times 1 \\
-      $\mtx{C}$ & output matrix, outputs \times states      & $\mtx{y}$ & output vector, outputs \times 1 \\
-      $\mtx{D}$ & feedthrough matrix, outputs \times inputs &  &  \\
-    \end{tabular}
-  \end{figurekey}
+.. .. math::
+..   \begin{figurekey}
+..     \begin{tabular}{llll}
+..       $\mtx{A}$ & system matrix, states \times states       & $\mtx{x}$ & state vector, states \times 1 \\
+..       $\mtx{B}$ & input matrix, states \times inputs        & $\mtx{u}$ & input vector, inptus \times 1 \\
+..       $\mtx{C}$ & output matrix, outputs \times states      & $\mtx{y}$ & output vector, outputs \times 1 \\
+..       $\mtx{D}$ & feedthrough matrix, outputs \times inputs &  
+..     \end{tabular}
+..   \end{figurekey}
 
 State-space control can deal with "continuous" or "discrete" systems. In decades past, plants and controllers were implemented using analog electronics, which are continuous in nature. These analog controllers didn't have discrete steps to them, analogous to an infinitely fast computer processor. However, processors such as the RoboRIO run in discrete "steps." Systems are often modeled first as continuous systems, and later converted to the discrete form in a process called discretization. WPILib's LinearSystem takes the continuous system matrices, and converts them internally where necessary. 
 
@@ -90,7 +90,12 @@ Visualizing State-space responses: phase portrait
 
 A `phase portrait <https://en.wikipedia.org/wiki/Phase_portrait>`__ can help give a visual intuition for the response of a system in state-space. The vectors on the graph have their roots at some point :math:`\mathbf{x}` in state-space, and point in the direction of :math:`\mathbf{\dot{x}}`, the direction that the system will evolve over time. This example shows a model of a pendulum with the states of angle and angular velocity. 
 
-.. image:: images/pendulum-phase-plot.png
+.. .. raw:: html
+
+..     <div style="text-align: center; margin-bottom: 2em;">
+..     <iframe width="100%" height="350" src="https://raw.githubusercontent.com/mcm001/state-space-animations/master/videos/phase-space/720p30/PendulumCirclingOrigin.mp4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+..     </div>
+
 
 To trace a potential trajectory that a system could take through state-space, choose a point to start at and follow the arrows around. In this example, we might start at :math:`[-2, 0]`. From there, the velocity increases as we swing through vertical and starts to decrease until we reach the opposite extreme of the swing. This cycle of spinning about the origin repeats indefinitely.
 
@@ -98,10 +103,12 @@ To trace a potential trajectory that a system could take through state-space, ch
 
 Note that near the edges of the phase plot, the X axis wraps around as a rotation of :math:`\pi` radians counter clockwise and a rotation of :math:`\pi` radians clockwise will end at the same point.
 
+For more on differential equations and phase portraits, see `3Blue1Brown's Differential Equations video <https://www.youtube.com/watch?v=p_di4Zn4wz4>`__ -- they do a great job of animating the pendulum phase space at around 15:30.
+
 Visualizing Feedforward
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-This phase portrait shows the "open loop" responses of the system -- that is, how it will react if we were to let the state evolve naturally. If we want to, say, balance the pendulum horizontal (at :math:`(\frac{\pi}{2}, 0)` in state space), we would need to somehow apply a control input to counteract the open loop tendency of the pendulum to swing downward. This is what feedforward is trying to do -- make it so that our phase portrait will have an equilibrium at the reference position (or setpoint) in state-space. Looking at our phase portrait from before, we can see that at :math:`(\frac{\pi}{2}, 0)` in state space, gravity is pulling the pendulum down with some torque T, and producing some downward angular acceleration with magnitude :math:`\frac{\uptau}{i}`. where I is angular `moment of inertia <https://en.wikipedia.org/wiki/Moment_of_inertia>`__ of the pendulum. If we want to create an equilibrium at our reference of :math:`(\frac{\pi}{2}, 0)`, we would need to apply an input that produces a :math:`\mathbf{\dot{x}}` is equal in magnitude and opposite in direction to the :math:`\mathbf{\dot{x}}` produced by the system's open-loop response to due to gravity. The math for this will be presented later. Here is the phase portrait where we apply a constant input that opposes the force of gravity at :math:`(\frac{\pi}{2}, 0)`:
+This phase portrait shows the "open loop" responses of the system -- that is, how it will react if we were to let the state evolve naturally. If we want to, say, balance the pendulum horizontal (at :math:`(\frac{\pi}{2}, 0)` in state space), we would need to somehow apply a control input to counteract the open loop tendency of the pendulum to swing downward. This is what feedforward is trying to do -- make it so that our phase portrait will have an equilibrium at the reference position (or setpoint) in state-space. Looking at our phase portrait from before, we can see that at :math:`(\frac{\pi}{2}, 0)` in state space, gravity is pulling the pendulum down with some torque T, and producing some downward angular acceleration with magnitude :math:`\frac{\tau}{i}`, where I is angular `moment of inertia <https://en.wikipedia.org/wiki/Moment_of_inertia>`__ of the pendulum. If we want to create an equilibrium at our reference of :math:`(\frac{\pi}{2}, 0)`, we would need to apply an input that produces a :math:`\mathbf{\dot{x}}` is equal in magnitude and opposite in direction to the :math:`\mathbf{\dot{x}}` produced by the system's open-loop response to due to gravity. The math for this will be presented later. Here is the phase portrait where we apply a constant input that opposes the force of gravity at :math:`(\frac{\pi}{2}, 0)`:
 
 .. image:: images/pendulum-balance.png
 
@@ -116,8 +123,8 @@ Let's start with the open loop pendulum example. The case where K is the zero ma
 
 .. image:: images/pendulum-closed-loop.png
 
-But with a real system, how is this gain matrix K chosen?
-L I N E A R Q U A D R A T I C R E Q U L A T O R
+But with a real system, how can we choose an optimal gain matrix K?
+L I N E A R Q U A D R A T I C R E G U L A T O R
 
 
 WPILib's LinearSystemLoop
@@ -131,7 +138,7 @@ WPILib's state-space control is based on the ``LinearSystemLoop`` class. This cl
 
 As the system being controlled is in discrete domain, we follow the following steps at each update cycle:
 
-- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\dot{\mathbf{x}}` to update the filter's estimate :math:`\dot{\mathbf{x}}. This updated state estimate is used by the Linear Quadratic Regulator to generate an updated input :math`\mathbf{u}` to drive the system towards the next reference (or setpoint).
+- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\dot{\mathbf{x}}` to update the filter's estimate :math:`\dot{\mathbf{x}}`. This updated state estimate is used by the Linear Quadratic Regulator to generate an updated input :math`\mathbf{u}` to drive the system towards the next reference (or setpoint).
 
 - ``predict()`` is called to update the Kalman Filter's state vector estimate :math:`\dot{\mathbf{x}}` based on applied inputs.
 
