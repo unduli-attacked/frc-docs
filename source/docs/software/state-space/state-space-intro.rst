@@ -35,9 +35,9 @@ What is state-space notation?
 
 State-space notation is a set of matrix equations which describe how a system will evolve over time. These equations relate the change in state :math:`\dot{\mathbf{x}}`, and the :term:`output` :math:`\mathbf{y}`, to linear combinations of the current state vector :math:`\mathbf{x}` and :term:`input` vector :math:`\mathbf{u}`. See section 4.2 of `Controls Engineering in FRC <https://file.tavsys.net/control/controls-engineering-in-frc.pdf>`__ for an introduction to linear combinations. The core idea of linear transformations is that we are simply summing or scaling the elements of :math:`\mathbf{x}` and :math:`\mathbf{u}`. For example, an operation involving an exponent or trigonometric function would not be considered a linear transformation. 
 
-State-space control can deal with continuous-time and discrete-time systems. A continuous-time system is modeled by a system of differential equations (as seen in the continuous-time case below). However, modern computer processors such as the RoboRIO run in discrete "steps," making it impossible to precisely model a system that is constantly evaluated. A continuous state-space system can be converted into a discrete-time system through a process called discretization. A discrete-time system expresses the state of the system at our next timestep based on the previous state and inputs, as opposed to the state derivative :math:`\dot{\mathbf{x}}`.
+State-space control can deal with continuous-time and discrete-time systems. A continuous-time system is modeled by a system of differential equations (as seen in the continuous-time case below). However, modern computer processors such as the RoboRIO run in discrete "steps," making it impossible to precisely model a system that is constantly evaluated. A continuous-time state-space system can be converted into a discrete-time system through a process called discretization. A discrete-time system expresses the state of the system at our next timestep based on the previous state and inputs, as opposed to the state derivative :math:`\dot{\mathbf{x}}`.
 
-The following two sets of equations are the standard form of continuous and discrete state-space notation:
+The following two sets of equations are the standard form of continuous-time and discrete-time state-space notation:
 
 .. math::
     \text{Continuos: }
@@ -56,9 +56,11 @@ The following two sets of equations are the standard form of continuous and disc
       $\mathbf{D}$ & feedthrough matrix &  &  \\
     \end{tabular}
 
-Systems are often modeled first as continuous systems, and later converted to the discrete form. WPILib's LinearSystem takes the continuous system matrices, and converts them internally where necessary. 
+Systems are often modeled first as continuous-time systems, and later converted to discrete-time systems. 
 
-..note:: Since a microcontroller performs discrete steps, there is a sample delay that introduces phase loss in the controller. Large amounts of phase loss can make a stable controller in the continuous domain become unstable in the discrete domain. The easiest way to combat phase loss and increase performance is to decrease the time between updates. WPILib's ``Notifier`` class can be used if updates faster than the main robot loop are desired. 
+.. important:: WPILib's LinearSystem takes continuous-time system matrices, and converts them internally where necessary. 
+
+.. note:: Since a microcontroller performs discrete steps, there is a sample delay that introduces phase loss in the controller. Large amounts of phase loss can make a stable controller in the continuous-time domain become unstable in the discrete domain. The easiest way to combat phase loss and increase performance is to decrease the time between updates. WPILib's ``Notifier`` class can be used if updates faster than the main robot loop are desired. 
 
 State-space notation example -- Flywheel from kV and kA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,7 +90,7 @@ To trace a potential trajectory that a system could take through state-space, ch
 
 .. image:: images/pendulum-markedup.jpg
 
-Note that near the edges of the phase plot, the X axis wraps around as a rotation of :math:`\pi` radians counter clockwise and a rotation of :math:`\pi` radians clockwise will end at the same point.
+Note that near the edges of the phase portrait, the X axis wraps around as a rotation of :math:`\pi` radians counter clockwise and a rotation of :math:`\pi` radians clockwise will end at the same point.
 
 For more on differential equations and phase portraits, see `3Blue1Brown's Differential Equations video <https://www.youtube.com/watch?v=p_di4Zn4wz4>`__ -- they do a great job of animating the pendulum phase space at around 15:30.
 
@@ -110,12 +112,12 @@ Let's start with the open loop pendulum example. The case where K is the zero ma
 
 .. image:: images/pendulum-closed-loop.png
 
-But with a real system, how can we choose an optimal :term:`gain` matrix K? While we can manually choose :term:`gain`\s and simulate the system response, or use tools like pole placement, modern control theory has a better answer: the Linear Quadratic Regulator (LQR).
+But with a real system, how can we choose an optimal :term:`gain` matrix K? While we can manually choose :term:`gain`\s and simulate the system response, or use tools like pole placement, modern control theory has a better answer: the Linear-Quadratic Regulator (LQR).
 
-The Linear Quadratic Regulator
+The Linear-Quadratic Regulator
 ------------------------------
 
-Linear Quadratic Regulators pick the closed loop :term:`gain` matrix :math:`\mathbf{K}` based on acceptable :term:`error` and :term:`control effort` constraints for linear systems. LQR works by minimizing the sum of :term:`error` and :term:`control effort` over time.
+Linear-Quadratic Regulators pick the closed loop :term:`gain` matrix :math:`\mathbf{K}` based on acceptable :term:`error` and :term:`control effort` constraints for linear systems. LQR works by minimizing the :term:`control effort` :math:`\mathbf{u}` expended to drive the :term:`system` to a :term:`reference`. This :term:`control effort` is minimized using a cost fuction that weights the sum of :term:`error` and :term:`control effort`\:
 
 .. math::
     J = \int\limits_0^\infty \left(\mathbf{x}^T\mathbf{Q}\mathbf{x} +
@@ -125,7 +127,7 @@ where :math:`\mathbf{J}` represents a trade-off between the state excursion and 
 
 The minimum of LQR's cost function is found by setting the derivative of the cost function to zero and solving for the control law :math:`\mathbf{u}`. However, matrix calculus is used instead of normal calculus to take the derivative.
 
-.. note:: LQR design's :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices don't need discretization, but the :math:`\mathbf{K}` calculated for continuous time and discrete time system will be different.
+.. note:: LQR design's :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices don't need discretization, but the :math:`\mathbf{K}` calculated for continuous-time and discrete time system will be different.
 
 The next obvious question is what values to choose for :math:`\mathbf{Q}` and :math:`\mathbf{R}`. While :math:`\mathbf{Q}` and :math:`\mathbf{R}` can be chosen almost arbitrary, Bryson's rule provides a simple form for these cost matrices. With Bryson's rule, the diagonals of the :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices are chosen based on the maximum acceptable value for each \gls{state} and actuator. The nondiagonal elements are zero.
 
@@ -150,7 +152,7 @@ where the weighting factor :math:`\rho` can be used to change the balance of :te
 .. note::
     Don't confuse Q and R with the elements we use to construct Q and R with using Bryson's rule! Q and R are matrices with dimensionality states by states and states by inputs resptively. We fill Q with as many "q elements" as the :term:`system` has :term:`state`\s, and R with as may "r elements" as the :term:`system` has :term:`input`\s.
 
-Let's apply a Linear Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. We arbitrarily choose a desired state excursion of 0.1rad/sec from the :term:`reference`, and constrain our :term:`control effort` to 12 volts. Therefore, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
+Let's apply a Linear-Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. We arbitrarily choose a desired state excursion of 0.1rad/sec from the :term:`reference`, and constrain our :term:`control effort` to 12 volts. Therefore, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
 
 A Time Domain Graph Will Go Here
 
@@ -159,15 +161,15 @@ WPILib's LinearSystemLoop
 
 WPILib's state-space control is based on the ``LinearSystemLoop`` class. This class contains all the components needed to control a mechanism using state-space control. It contains the following members:
 
-- A ``LinearSystem`` representing the continuous state-space equations of the system.
-- A Kalman Filter, used to filter noise from sensor measurements.
-- A Linear Quadratic Regulator, which combines feedback and feedforward to generate inputs.
+- A ``LinearSystem`` representing the continuous-time state-space equations of the :term:`system`.
+- A Kalman Filter, used to filter noise from sensor :term:`measurement`\s.
+- A Linear-Quadratic Regulator, which combines feedback and feedforward to generate :term:`input`\s.
 
 As the system being controlled is in discrete domain, we follow the following steps at each update cycle:
 
-- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\dot{\mathbf{x}}` to update the filter's estimate :math:`\dot{\mathbf{x}}`. This updated state estimate is used by the Linear Quadratic Regulator to generate an updated :term:`input` :math`\mathbf{u}` to drive the system towards the next :term:`reference` (or setpoint).
+- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\hat{\mathbf{x}}` (:term:`x-hat`) to steer our the prediction back to reality using :term:`measurement`\s of what the :term:`plant` is actually doing. This updated state estimate is used by the Linear-Quadratic Regulator to generate an updated :term:`input` :math`\mathbf{u}` to drive the system towards the next :term:`reference`.
 
-- ``predict()`` is called to update the Kalman Filter's state vector estimate :math:`\dot{\mathbf{x}}` based on applied inputs.
+- ``predict()`` uses the state-space model to predict where the the :term:`system`\'s :term:`state` :math:`\hat{\mathbf{x}}` (:term:`x-hat`) will be in the future based on applied inputs. The predict step is analogous to estimating a pendulum's (or other :term:`system`\s) next state by following the arrows in a phase portrait.
 
 - The updated :term:`input` is set to motors or other physical actuator.
 
@@ -195,6 +197,8 @@ Glossary
             - Ex. A flywheel will have 1 input: the voltage of the motor driving it.
             - Ex. A drivetrain might have 2 inputs: the voltages of the left and right motors.
 
+        Inputs are often represented by the variable :math:`\mathbf{u}`, a column vector with one entry per :term:`input` to the :term:`system`.
+
     Observer
         In control theory, a system that provides an estimate of the internal :term:`state` of a given real :term:`system` from measurements of the :term:`input` and :term:`output` of the real :term:`system`. WPILib includes a Kalman Filter class for observing linear systems, and ExtendedKalmanFilter and UnscentedKalmanFilter classes for nonlinear systems. TODO maybe clarify more?
 
@@ -203,6 +207,11 @@ Glossary
 
             - Ex. A flywheel might have 1 :term:`output` from a encoder that measures it's velocity.
             - Ex. A drivetrain might use solvePNP and V-SLAM to find it's x/y/heading position on the field. It's fine that there are 6 measurements (solvePNP x/y/heading and V-SLAM x/y/heading) and 3 states (robot x/y/heading).
+
+        Outputs of a :term:`system` are often represented using the variable :math:`\mathbf{y}`, a column vector with one entry per :term:`output` (or thing we can measure). For example, if our :term:`system` had states for velocity and acceleration but our sensor could only measure velocity, our, our :term:`output` vector would only include the :term:`system`\'s velocity.
+
+    Measurement
+        Measurements are :term:`output`\s that are measured from a :term:`plant`, or physical system, using sensors.
 
     Plant
         The system or collection of actuators being controlled. 
@@ -219,12 +228,10 @@ Glossary
             - Ex. A drivetrain system might have the states :math:`\begin{bmatrix}x \\ y \\ \theta \end{bmatrix}` [x, y, heading]^T to describe it's position on the field.
             - Ex. An elevator system might have the states [position, velocity]^T to describe its current height and velocity.
 
+        A :term:`system`\s state is often represented by the variable :math:`\mathbf{x}`, a column vector with one entry per :term:`state`.
 
-Common Variable Names
----------------------
+    x-dot
+        :math:`\dot{\mathbf{x}}`, or x-dot: the derivative of the :term:`state` vector :math:`\mathbf{x}`. If the :term:`system` had just a velocity :term:`state`, then :math:`\dot{\mathbf{x}}` would represent the :term:`system`\'s acceleration.
 
-- :math:`\mathbf{x}`, the :term:`state` vector. A column vector with one entry per :term:`state`.
-- :math:`\dot{\mathbf{x}}`, or xdot: the derivative of the :term:`state` vector :math:`\mathbf{x}`. If the :term:`system` had just a velocity :term:`state`, then :math:`\dot{\mathbf{x}}` would represent the :term:`system`\'s acceleration.
-- :math:`\hat{\mathbf{x}}`, or xhat: the estimated :term:`state` of a system, as estimated by an :term:`observer`. 
-- :math:`\mathbf{u}`, or control :term:`input`. A column vector with one entry per :term:`input` to the :term:`system`.
-- :math:`\mathbf{y}`, the :term:`output`, or measurement, vector. A column vector with one entry per :term:`output` (or thing we can measure) of the :term:`system`. For example, if our :term:`system` had states for velocity and acceleration but our sensor could only measure velocity, our, our :term:`output` vector would only include the :term:`system`\'s velocity.
+    x-hat
+        :math:`\hat{\mathbf{x}}`, or x-hat: the estimated :term:`state` of a system, as estimated by an :term:`observer`. 
