@@ -48,28 +48,30 @@ In addition to the state, inputs and outputs are represented as vectors. Since t
 What is state-space notation?
 -----------------------------
 
-State-space notation is a set of matrix equations which describe how a system will evolve over time. These equations relate the change in state :math:`\dot{\mathbf{x}}`, and the output :math:`\mathbf{y}`, to linear combinations of the current state vector :math:`\mathbf{x}` and input vector :math:`\mathbf{u}`. See section 4.2 of `Controls Engineering in FRC <https://file.tavsys.net/control/controls-engineering-in-frc.pdf>`__ for an introduction to linear combinations. The core idea of linear transformations is that we are simply summing or scaling the elements of :math:`\mathbf{x}` and :math:`\mathbf{u}`. For example, an operation involving an exponent or trigonometric function would not be considered a linear transformation. The following two sets of equations are the standard form of continuous and discrete state-space notation:
+State-space notation is a set of matrix equations which describe how a system will evolve over time. These equations relate the change in state :math:`\dot{\mathbf{x}}`, and the output :math:`\mathbf{y}`, to linear combinations of the current state vector :math:`\mathbf{x}` and input vector :math:`\mathbf{u}`. See section 4.2 of `Controls Engineering in FRC <https://file.tavsys.net/control/controls-engineering-in-frc.pdf>`__ for an introduction to linear combinations. The core idea of linear transformations is that we are simply summing or scaling the elements of :math:`\mathbf{x}` and :math:`\mathbf{u}`. For example, an operation involving an exponent or trigonometric function would not be considered a linear transformation. 
+
+State-space control can deal with continuous-time and discrete-time systems. A continuous-time system is modeled by a system of differential equations (as seen in the continuous-time case below). However, modern computer processors such as the RoboRIO run in discrete "steps," making it impossible to precisely model a system that is constantly evaluated. A continuous state-space system can be converted into a discrete-time system through a process called discretization. A discrete-time system expresses the state of the system at our next timestep based on the previous state and inputs, as opposed to the state derivative :math:`\dot{\mathbf{x}}`.
+
+The following two sets of equations are the standard form of continuous and discrete state-space notation:
 
 .. math::
-    \text{Continuos:}
+    \text{Continuos: }
     \dot{\mathbf{x}} &= \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u} \\
     \mathbf{y} &= \mathbf{C}\mathbf{x} + \mathbf{D}\mathbf{u} \\
     \nonumber \\
-    \text{Discrete:}
+    \text{Discrete: }
     \mathbf{x}_{k+1} &= \mathbf{A}\mathbf{x}_k + \mathbf{B}\mathbf{u}_k \\
     \mathbf{y}_k &= \mathbf{C}\mathbf{x}_k + \mathbf{D}\mathbf{u}_k
 
-.. .. math::
-..   \begin{figurekey}
-..     \begin{tabular}{llll}
-..       $\mtx{A}$ & system matrix, states \times states       & $\mtx{x}$ & state vector, states \times 1 \\
-..       $\mtx{B}$ & input matrix, states \times inputs        & $\mtx{u}$ & input vector, inptus \times 1 \\
-..       $\mtx{C}$ & output matrix, outputs \times states      & $\mtx{y}$ & output vector, outputs \times 1 \\
-..       $\mtx{D}$ & feedthrough matrix, outputs \times inputs &  
-..     \end{tabular}
-..   \end{figurekey}
+.. math::
+    \begin{tabular}{llll}
+      $\mathbf{A}$ & system matrix      & $\mathbf{x}$ & state vector \\
+      $\mathbf{B}$ & input matrix       & $\mathbf{u}$ & input vector \\
+      $\mathbf{C}$ & output matrix      & $\mathbf{y}$ & output vector \\
+      $\mathbf{D}$ & feedthrough matrix &  &  \\
+    \end{tabular}
 
-State-space control can deal with "continuous" or "discrete" systems. In decades past, plants and controllers were implemented using analog electronics, which are continuous in nature. These analog controllers didn't have discrete steps to them, analogous to an infinitely fast computer processor. However, processors such as the RoboRIO run in discrete "steps." Systems are often modeled first as continuous systems, and later converted to the discrete form in a process called discretization. WPILib's LinearSystem takes the continuous system matrices, and converts them internally where necessary. 
+Systems are often modeled first as continuous systems, and later converted to the discrete form. WPILib's LinearSystem takes the continuous system matrices, and converts them internally where necessary. 
 
 ..note:: Since a microcontroller performs discrete steps, there is a sample delay that introduces phase loss in the controller. Large amounts of phase loss can make a stable controller in the continuous domain become unstable in the discrete domain. The easiest way to combat phase loss and increase performance is to decrease the time between updates. WPILib's ``Notifier`` class can be used if updates faster than the main robot loop are desired. 
 
@@ -123,9 +125,44 @@ Let's start with the open loop pendulum example. The case where K is the zero ma
 
 .. image:: images/pendulum-closed-loop.png
 
-But with a real system, how can we choose an optimal gain matrix K?
-L I N E A R Q U A D R A T I C R E G U L A T O R
+But with a real system, how can we choose an optimal gain matrix K? While we can manually choose gains and simulate the system response, or use tools like pole placement, modern control theory has a better answer: the Linear Quadratic Regulator (LQR).
 
+The Linear Quadratic Regulator
+------------------------------
+
+Linear Quadratic Regulators pick the closed loop gain matrix :math:`\mathbf{K}` for us based on acceptable error and control effort constraints for linear systems. LQR works by minimizing the sum of error and control effort over time.
+
+.. math::
+    J = \int\limits_0^\infty \left(\mathbf{x}^T\mathbf{Q}\mathbf{x} +
+    \mathbf{u}^T\mathbf{R}\mathbf{u}\right) dt
+
+where :math:`\mathbf{J}` represents a trade-off between the state excursion and control effort. The trade-off is weighted with the  factors :math:`\mathbf{Q}` and :math:`\mathbf{R}`, where :math:`\mathbf{Q}` weights state excursion and :math:`\mathbf{R}` weights control effort.
+
+The minimum of LQR's cost function is found by setting the derivative of the cost function to zero and solving for the control law :math:`\mathbf{u}`. However, matrix calculus is used instead of normal calculus to take the derivative.
+
+.. note:: LQR design's :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices don't need discretization, but the :math:`\mathbf{K}` calculated for continuous time and discrete time system will be different.
+
+The next obvious question is what values to choose for :math:`\mathbf{Q}` and :math:`\mathbf{R}`. While :math:`\mathbf{Q}` and :math:`\mathbf{R}` can be chosen almost arbitrary, Bryson's rule provides a simple form for these cost matrices. With Bryson's rule, the diagonals of the :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices are chosen based on the maximum acceptable value for each \gls{state} and actuator. The nondiagonal elements are zero.
+
+.. math::   
+    \begin{array}{cc}
+        \mathbf{Q} = \begin{bmatrix}
+            \frac{\rho}{x_{1,max}^2} & 0 & \ldots & 0 \\
+            0 & \frac{\rho}{x_{2,max}^2} & & \vdots \\
+            \vdots & & \ddots & 0 \\
+            0 & \ldots & 0 & \frac{\rho}{x_{n,max}^2}
+        \end{bmatrix} &
+        \mathbf{R} = \begin{bmatrix}
+            \frac{1}{u_{1,max}^2} & 0 & \ldots & 0 \\
+            0 & \frac{1}{u_{2,max}^2} & & \vdots \\
+            \vdots & & \ddots & 0 \\
+            0 & \ldots & 0 & \frac{1}{u_{n,max}^2}
+        \end{bmatrix}
+    \end{array}
+
+where the weighting factor :math:`\rho` can be used to change the balance of control effort and state excursion. Small values of :math:`\rho` penalize control effort, while large values of :math:`\rho` penalize state excursion. The values of :math:`x_1, x_2...x_m` are the maximum desired error tolerance for each state of the system, and :math:`u_1, u_2...u_n` are maximum desired control efforts for each input. WPILib's LinearQuadraticRegulator takes simply a list of :math:`x_1, x_2...x_m` elements for Q and :math:`u_1, u_2...u_n` for R. By choosing Q and R elements to feed to an LQR through Bryson's rule, the response of the plat can be tuned.
+
+For example, take a flywheel velocity system determined through system identification to have kV = 2.9 volts per radian per second and kA = 0.3 volts per radian per second squared. Because we would like our flywheel to be within 0.1rad/sec of the reference and apply at most 12 volts, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a gain of K = ~13. This K gain can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize control effort, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our error tolerance q from 0.1 to 1.0, our gain K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
 
 WPILib's LinearSystemLoop
 -------------------------
