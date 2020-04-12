@@ -115,7 +115,7 @@ But with a real system, how can we choose an optimal :term:`gain` matrix K? Whil
 The Linear Quadratic Regulator
 ------------------------------
 
-Linear Quadratic Regulators pick the closed loop :term:`gain` matrix :math:`\mathbf{K}` for us based on acceptable:term:`error` and :term:`control effort` constraints for linear systems. LQR works by minimizing the sum of:term:`error` and :term:`control effort` over time.
+Linear Quadratic Regulators pick the closed loop :term:`gain` matrix :math:`\mathbf{K}` based on acceptable :term:`error` and :term:`control effort` constraints for linear systems. LQR works by minimizing the sum of :term:`error` and :term:`control effort` over time.
 
 .. math::
     J = \int\limits_0^\infty \left(\mathbf{x}^T\mathbf{Q}\mathbf{x} +
@@ -145,9 +145,14 @@ The next obvious question is what values to choose for :math:`\mathbf{Q}` and :m
         \end{bmatrix}
     \end{array}
 
-where the weighting factor :math:`\rho` can be used to change the balance of :term:`control effort` and state excursion. Small values of :math:`\rho` penalize :term:`control effort`, while large values of :math:`\rho` penalize state excursion. The values of :math:`x_1, x_2...x_m` are the maximum desired :term:`error` tolerance for each state of the system, and :math:`u_1, u_2...u_n` are maximum desired :term:`control effort`\s for each input. WPILib's LinearQuadraticRegulator takes simply a list of :math:`x_1, x_2...x_m` elements for Q and :math:`u_1, u_2...u_n` for R. By choosing Q and R elements to feed to an LQR through Bryson's rule, the response of the plat can be tuned.
+where the weighting factor :math:`\rho` can be used to change the balance of :term:`control effort` and state excursion. Small values of :math:`\rho` penalize :term:`control effort`, while large values of :math:`\rho` penalize state excursion. The values of :math:`x_1, x_2...x_m` are the maximum desired :term:`error` tolerance for each state of the system, and :math:`u_1, u_2...u_n` are maximum desired :term:`control effort`\s for each input. WPILib's LinearQuadraticRegulator takes simply a list of :math:`x_1, x_2...x_m` "q elements" to build Q with, and :math:`u_1, u_2...u_n` "r elements" to build R wth. By choosing q and r elements to construct Q and R with, the response of the plat can be tuned to satisfaction.
 
-For example, take a flywheel velocity system determined through system identification to have kV = 2.9 volts per radian per second and kA = 0.3 volts per radian per second squared. Because we would like our flywheel to be within 0.1rad/sec of the :term:`reference` and apply at most 12 volts, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
+.. note::
+    Don't confuse Q and R with the elements we use to construct Q and R with using Bryson's rule! Q and R are matrices with dimensionality states by states and states by inputs resptively. We fill Q with as many "q elements" as the :term:`system` has :term:`state`\s, and R with as may "r elements" as the :term:`system` has :term:`input`\s.
+
+Let's apply a Linear Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. We arbitrarily choose a desired state excursion of 0.1rad/sec from the :term:`reference`, and constrain our :term:`control effort` to 12 volts. Therefore, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
+
+A Time Domain Graph Will Go Here
 
 WPILib's LinearSystemLoop
 -------------------------
