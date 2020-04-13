@@ -106,7 +106,7 @@ Feedback Control and LQR
 
 In the case of a DC motor, with just a mathematical model and knowledge of all current states of the system(i.e., angular velocity), we can predict all future states given the future voltage inputs. But if the system is disturbed in any way that isn’t modeled by our equations, like a load or unexpected friction,the angular velocity of the motor will deviate from the model over time. To combat this, we can give the motor corrective commands to account for model uncertainty. 
 
-A PID controller is a form of feedback control. State-space control often uses the control law (a mathematical formula that generates inputs to drive a system to a desired state) :math:`\mathbf{u} = \mathbf{K(r - x)}`, where K is some controller :term:`gain` matrix, r is the :term:`reference`\state and x is the current state in state-space. The difference between these two vectors, :math:`r - x`, is known as :term:`error`. This control law is essentially a multidimensional proportional controller. Because model-based control means that we can predict the future states of a system given an initial condition and future control inputs, we can pick a mathematically optimal :term:`gain` matrix K. 
+A PID controller is a form of feedback control. State-space control often uses the :term:`control law` :math:`\mathbf{u} = \mathbf{K(r - x)}`, where K is some controller :term:`gain` matrix, r is the :term:`reference`\state and x is the current state in state-space. The difference between these two vectors, :math:`r - x`, is known as :term:`error`. This :term:`control law` is essentially a multidimensional proportional controller. Because model-based control means that we can predict the future states of a system given an initial condition and future control inputs, we can pick a mathematically optimal :term:`gain` matrix K. 
 
 Let's start with the open loop pendulum example. The case where K is the zero matrix would mean that no control :term:`input` is applied, and the phase portrait would look identical to the one above. Let's pick a K of [[2, 0], [0, 2]], where are :term:`input` to the pendulum is angular acceleration. This K would mean that for every degree of position :term:`error`, the angular acceleration would be 1 degree per second squared; similarly, we accelerate by 1 degree per second squared for every degree per second of :term:`error`. Try following an arrow from somewhere in state-space inwards -- no matter the initial conditions, the state will settle at the :term:`reference` rather than circle endlessly with pure feedforward. 
 
@@ -117,21 +117,24 @@ But with a real system, how can we choose an optimal :term:`gain` matrix K? Whil
 The Linear-Quadratic Regulator
 ------------------------------
 
-Linear-Quadratic Regulators pick the closed loop :term:`gain` matrix :math:`\mathbf{K}` based on acceptable :term:`error` and :term:`control effort` constraints for linear systems. LQR works by minimizing the :term:`control effort` :math:`\mathbf{u}` expended to drive the :term:`system` to a :term:`reference`. This :term:`control effort` is minimized using a cost fuction that weights the sum of :term:`error` and :term:`control effort`\:
+Linear-Quadratic Regulators works by finding a :term:`control law` that minimizes the following cost function, which weights the sum of :term:`error` and :term:`control effort` over time, subject to the linear :term:`system` dynamics :math:`\mathbf{\dot{x} = Ax + Bu}`.
 
 .. math::
     J = \int\limits_0^\infty \left(\mathbf{x}^T\mathbf{Q}\mathbf{x} +
     \mathbf{u}^T\mathbf{R}\mathbf{u}\right) dt
 
-where :math:`\mathbf{J}` represents a trade-off between the state excursion and :term:`control effort`. The trade-off is weighted with the  factors :math:`\mathbf{Q}` and :math:`\mathbf{R}`, where :math:`\mathbf{Q}` weights state excursion and :math:`\mathbf{R}` weights :term:`control effort`.
+The :term:`control law` that minimizes :math:`\mathbf{J}` is the :term:`control law` :math:`\mathbf{u = K(r - x)}`, where :math:`r-x` is the :term:`error`.
 
-The minimum of LQR's cost function is found by setting the derivative of the cost function to zero and solving for the control law :math:`\mathbf{u}`. However, matrix calculus is used instead of normal calculus to take the derivative.
+By adjusting the state excursion weight :math:`\mathbf{Q}` and :term:`control effort` weight :math:`\mathbf{R}`, the response of the system can be tuned to suit the application.
 
-.. note:: LQR design's :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices don't need discretization, but the :math:`\mathbf{K}` calculated for continuous-time and discrete time system will be different.
+.. note:: LQR design's :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices don't need discretization, but the :math:`\mathbf{K}` calculated for continuous-time and discrete time :term:`system`\s will be different.
 
-The next obvious question is what values to choose for :math:`\mathbf{Q}` and :math:`\mathbf{R}`. While :math:`\mathbf{Q}` and :math:`\mathbf{R}` can be chosen almost arbitrary, Bryson's rule provides a simple form for these cost matrices. With Bryson's rule, the diagonals of the :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices are chosen based on the maximum acceptable value for each \gls{state} and actuator. The nondiagonal elements are zero.
+Bryson's Rule
+~~~~~~~~~~~~~
 
-.. math::   
+Picking these :math:`\mathbf{Q}` and :math:`\mathbf{R}` weights can be done using Bryson's rule, which provides a simple form for these cost matrices. With Bryson's rule, the diagonals of the :math:`\mathbf{Q}` and :math:`\mathbf{R}` matrices are chosen based on the maximum acceptable value for each :term:`state` and :term:`input`. The nondiagonal elements are zero.
+
+.. math::
     \begin{array}{cc}
         \mathbf{Q} = \begin{bmatrix}
             \frac{\rho}{x_{1,max}^2} & 0 & \ldots & 0 \\
@@ -147,12 +150,26 @@ The next obvious question is what values to choose for :math:`\mathbf{Q}` and :m
         \end{bmatrix}
     \end{array}
 
-where the weighting factor :math:`\rho` can be used to change the balance of :term:`control effort` and state excursion. Small values of :math:`\rho` penalize :term:`control effort`, while large values of :math:`\rho` penalize state excursion. The values of :math:`x_1, x_2...x_m` are the maximum desired :term:`error` tolerance for each state of the system, and :math:`u_1, u_2...u_n` are maximum desired :term:`control effort`\s for each input. WPILib's LinearQuadraticRegulator takes simply a list of :math:`x_1, x_2...x_m` "q elements" to build Q with, and :math:`u_1, u_2...u_n` "r elements" to build R wth. By choosing q and r elements to construct Q and R with, the response of the plat can be tuned to satisfaction.
+where the weighting factor :math:`\rho` can be used to change the balance of :term:`control effort` and state excursion. Small values of :math:`\rho` penalize :term:`control effort`, while large values of :math:`\rho` penalize state excursion. The values of :math:`x_1, x_2...x_m` are the maximum desired :term:`error` tolerance for each state of the system, and :math:`u_1, u_2...u_n` are maximum desired :term:`control effort`\s for each input. 
 
 .. note::
-    Don't confuse Q and R with the elements we use to construct Q and R with using Bryson's rule! Q and R are matrices with dimensionality states by states and states by inputs resptively. We fill Q with as many "q elements" as the :term:`system` has :term:`state`\s, and R with as may "r elements" as the :term:`system` has :term:`input`\s.
+    Don't confuse Q and R with the elements we use to construct Q and R with using Bryson's rule! Q and R are matrices with dimensionality states by states and states by inputs restively. We fill Q with as many "q elements" as the :term:`system` has :term:`state`\s, and R with as may "r elements" as the :term:`system` has :term:`input`\s.
 
-Let's apply a Linear-Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. We arbitrarily choose a desired state excursion of 0.1rad/sec from the :term:`reference`, and constrain our :term:`control effort` to 12 volts. Therefore, we choose q = 0.1 and r = 12.0 to give to Bryson's rule and compute LQR with. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` can be thought exactly as the Proportional of a PID loop on flywheel's velocity. If this were true, we'd except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively by applying less gas. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 would have produced the same resultant K.
+Increasing the q elements :math:`x_1, x_2...x_m` or decreasing :math:`\rho` would make the LQR penalize large errors less heavily, and the resulting control law will behave more conservatively. This has a similar effect to penalizing :term:`control effort` more heavily by decreasing the r elements :math:`u_1, u_2...u_n`.
+
+Similarly, decreasing the q elements :math:`x_1, x_2...x_m` or increasing :math:`\rho` would make the LQR penalize large errors more heavily, and the resulting control law will behave more aggressively. This has a similar effect to penalizing :term:`control effort` less heavily by increasing the r elements :math:`u_1, u_2...u_n`.
+
+LQR: example application
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's apply a Linear-Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. Using the Flywheel example above (TODO link), we know we have the following linear :term:`system`:
+
+.. math::
+    \mathbf{\dot{x}} &= [\frac{-kV}{kA}] \cdot v + \frac{1}{kA} \cdot V
+
+We arbitrarily choose a desired state excursion of q = [0.1rad/sec], and constrain our :term:`control effort` to r = [12 volts]. After discretization with a timestep of 20ms, we find a :term:`gain` of K = ~13. This K :term:`gain` acts as the proportional component of a PID loop on flywheel's velocity. 
+
+Let's play with Q and R. We except that increasing the q elements or decreasing the r elements we give Bryson's rule would make our controller more heavily penalize :term:`control effort`, analogous to trying to conserve fuel in a space ship or drive a car more conservatively. In fact, if we increase our :term:`error` tolerance q from 0.1 to 1.0, our :term:`gain` K drops from ~13 to ~6. Similarly, decreasing our maximum voltage r to 1.2 from 12.0 produces the same resultant K.
 
 A Time Domain Graph Will Go Here
 
@@ -184,6 +201,9 @@ Glossary
 
     Controller
         Applies an :term:`input` to a :term:`plant` to drive the difference between a :term:`reference` and :term:`output`, or :term:`error`, to zero.
+
+    Control Law
+        A mathematical formula that generates :term:`input`\s to drive a :term:`system` to a desired :term:`state`.
 
     Error
         :term:`Reference` minus an output or state.
