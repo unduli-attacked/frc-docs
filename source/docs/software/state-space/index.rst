@@ -7,3 +7,5 @@ This section provides an introduction to and describes WPILib support for state-
    :maxdepth: 1
 
    state-space-intro
+   state-space-observers
+   state-space-debugging
