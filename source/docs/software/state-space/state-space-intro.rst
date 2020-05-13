@@ -22,7 +22,7 @@ For the background vocabulary that will be used throught this article, see the `
 What is state-space?
 --------------------
 
-Recall that 2D space has two axes: x and y. We represent locations within this space as a pair of numbers packaged in a vector, and each coordinate is a measure of how far to move along the corresponding axis. State-space is a Cartesian coordinate system with an axis for each state variable, and we represent locations within it the same way we do for 2D space: with a list of numbers in a vector. Each element in the vector corresponds to a state of the system. This example shows two example state vectors in the state-space of an elevator model with the states :math`[\text{position}, \text{velocity}]`
+Recall that 2D space has two axes: x and y. We represent locations within this space as a pair of numbers packaged in a vector, and each coordinate is a measure of how far to move along the corresponding axis. State-space is a Cartesian coordinate system with an axis for each state variable, and we represent locations within it the same way we do for 2D space: with a list of numbers in a vector. Each element in the vector corresponds to a state of the system. This example shows two example state vectors in the state-space of an elevator model with the states :math:`[\text{position}, \text{velocity}]`
 
 .. image:: images/state-space-graph.png
 
@@ -65,7 +65,7 @@ Systems are often modeled first as continuous-time systems, and later converted 
 State-space notation example -- Flywheel from kV and kA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Recall that we can model the motion of a flywheel connected to a brushed DC motor with the equation :math:`V = kV \dot v + kA \dot a`, where V is voltage output, v is the flywheel's angular velocity and a is its angular acceleration. This equation can be rewritten as :math:`a = (V - kV \dot v) / kA`, or :math:`a = ((-kV / kA) \dot v + 1/kA \dot V)`. Notice anything familiar? This equation relates the angular acceleration of the flywheel to its angular velocity and the voltage applied. 
+Recall that we can model the motion of a flywheel connected to a brushed DC motor with the equation :math:`V = kV \dot v + kA \dot a`, where V is voltage output, v is the flywheel's angular velocity and a is its angular acceleration. This equation can be rewritten as :math:`a = \frac{V - kV \dot v}{kA}`, or :math:`a = \frac{-kV}{kA}) \dot v + \frac{1}{kA} \dot V`. Notice anything familiar? This equation relates the angular acceleration of the flywheel to its angular velocity and the voltage applied. 
 
 We can convert this equation to state-space notation. We can create a system with one state (velocity), one :term:`input` (voltage), and one :term:`output` (velocity). Recalling that the first derivative of velocity is acceleration, we can write our equation as follows:
 
@@ -162,7 +162,7 @@ Similarly, decreasing the q elements :math:`x_1, x_2...x_m` or increasing :math:
 LQR: example application
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's apply a Linear-Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. Using the Flywheel example above (TODO link), we know we have the following linear :term:`system`:
+Let's apply a Linear-Quadratic Regulator to a real-world example. Say we have a flywheel velocity system determined through system identification to have :math:`kV = 2.9 \frac{\text{volts}}{\text{radian per second}}` and :math:`kA = 0.3 \frac{\text{volts}}{\text{radians per second squared}}`. Using the Flywheel example above, we have the following linear :term:`system`:
 
 .. math::
     \mathbf{\dot{x}} &= [\frac{-kV}{kA}] \cdot v + \frac{1}{kA} \cdot V
@@ -184,7 +184,7 @@ WPILib's state-space control is based on the ``LinearSystemLoop`` class. This cl
 
 As the system being controlled is in discrete domain, we follow the following steps at each update cycle:
 
-- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\hat{\mathbf{x}}` (:term:`x-hat`) to steer our the prediction back to reality using :term:`measurement`\s of what the :term:`plant` is actually doing. This updated state estimate is used by the Linear-Quadratic Regulator to generate an updated :term:`input` :math`\mathbf{u}` to drive the system towards the next :term:`reference`.
+- ``correct(measurement, nextReference)`` "fuses" the measurement and Kalman Filter :math:`\hat{\mathbf{x}}` (:term:`x-hat`) to steer our the prediction back to reality using :term:`measurement`\s of what the :term:`plant` is actually doing. This updated state estimate is used by the Linear-Quadratic Regulator to generate an updated :term:`input` :math:`\mathbf{u}` to drive the system towards the next :term:`reference`.
 
 - ``predict()`` uses the state-space model to predict where the the :term:`system`\'s :term:`state` :math:`\hat{\mathbf{x}}` (:term:`x-hat`) will be in the future based on applied inputs. The predict step is analogous to estimating a pendulum's (or other :term:`system`\s) next state by following the arrows in a phase portrait.
 
