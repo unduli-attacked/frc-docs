@@ -245,7 +245,7 @@ Glossary
     State
         A characteristic of a system that can be used to determine the system's future behavior. In state-space notation, the state of a system is written as a column vector describing it's position in state-space.
 
-            - Ex. A drivetrain system might have the states :math:`\begin{bmatrix}x \\ y \\ \theta \end{bmatrix}` [x, y, heading]^T to describe it's position on the field.
+            - Ex. A drivetrain system might have the states :math:`\begin{bmatrix}x \\ y \\ \theta \end{bmatrix}` to describe it's position on the field.
             - Ex. An elevator system might have the states [position, velocity]^T to describe its current height and velocity.
 
         A :term:`system`\s state is often represented by the variable :math:`\mathbf{x}`, a column vector with one entry per :term:`state`.

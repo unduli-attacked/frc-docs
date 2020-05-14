@@ -58,3 +58,4 @@ Because these new left and right velocities are still speeds and not voltages, t
 Ramsete in the Command-Based Framework
 --------------------------------------
 For the sake of ease for users, a ``RamseteCommand`` class is built in to WPILib. For a full tutorial on implementing a path-following autonomous using RamseteCommand, see :ref:`docs/software/examples-tutorials/trajectory-tutorial/index:Trajectory Tutorial`.
+
