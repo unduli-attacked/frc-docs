@@ -59,7 +59,6 @@ Welcome to the *FIRST*\ |reg| Robotics Competition Control System Documentation!
    docs/software/networktables/index
    docs/software/roborio-info/index
    docs/software/advanced-control/index
-   docs/software/advanced-control/state-space/index
 
 .. toctree::
    :maxdepth: 1
