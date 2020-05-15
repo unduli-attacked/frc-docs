@@ -173,6 +173,15 @@ Let's play with Q and R. We except that increasing the q elements or decreasing 
 
 A Time Domain Graph Will Go Here
 
+Linearization
+-------------
+
+Linearization is a tool used to approximate nonlinear functions and state-space systems using linear ones. In two-dimensional space, linear functions are straight lines while nonlinear functions curve. A common example of a nonlinear function and its corresponding linear approximation is :math:`y=\sin{x}`. This function can be approximated by :math:`y=x` near zero. This approximation is accurate while near :math:`x=0`, but looses accuracy as we stray further from the linearization point. For example, the approximation :math:`\sin{x} \approx x` is accurate to within 0.02 within 0.5 radians of :math:`y = 0`, but quickly grows past that. In the following picture, blue shows :math:`y =\sin{x}`, orange shows :math:`y=x`, and green shows the difference between the two functions.
+
+.. image:: images/linear-sin-x.jpg
+
+We can also linearize state-space systems with nonlinear :term:`dynamics`. We do this by picking a point :math:`\mathbf{x}` in state-space and using this as the input to our nonlinear functions. Like in the above example, this works well for states near the point about which the system was linearized, but can quickly diverge further from that state. 
+
 WPILib's LinearSystemLoop
 -------------------------
 
@@ -195,6 +204,9 @@ Glossary
 ========
 
 .. glossary::
+
+    Dynamics
+        A branch of physics concerned with the motion of bodies under the action of forces. In modern control, systems evolve according to their dynamics.
 
     Control Effort
         A term describing how much force, pressure, etc. an actuator is exerting
