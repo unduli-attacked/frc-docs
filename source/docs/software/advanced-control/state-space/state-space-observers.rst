@@ -1,7 +1,10 @@
-State Observers
-===============
+State Observers and Kalman Filters
+==================================
 
 State observers combine information about a system's behavior and external measurements to estimate the true state of the system. A common observer used for linear systems is the Kalman Filter.
+
+Kalman Filters
+--------------
 
 .. important:: It is important to develop an intuition for what a Kalman filter is actually doing. The book `Kalman and Bayesian Filters in Python by Roger Labbe <https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python>`__ provides a great visual and interactive introduction to Bayesian filters. The Kalman filters in WPILib use linear algebra to gentrify the math, but the ideas are similar to the single-dimensional case. We suggest reading through Chapter 4 to gain an intuition for what these filters are doing.
 
